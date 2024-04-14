@@ -1,5 +1,6 @@
 import nltk
 import string
+import pandas as pd
 nltk.download('stopwords')
 
 from nltk.corpus import stopwords
@@ -29,7 +30,7 @@ def preprocessing_function(text: str) -> str:
     # TO-DO 0: Other preprocessing function attemption
     # Begin your code 
     preprocessed_text = preprocessed_text.lower() # Convert to lower case
-    preprocessed_text = preprocessed_text.replace("<br />", " ") # Replacing newline symbol with spaces
+    preprocessed_text = preprocessed_text.replace("<br / >", " ") # Replacing newline symbol with spaces
     preprocessed_text = preprocessed_text.translate(str.maketrans('', '', string.punctuation)) # Removing punctuation
     stemmer = PorterStemmer()
     tokenizer = ToktokTokenizer()
@@ -39,3 +40,10 @@ def preprocessing_function(text: str) -> str:
     # End your code
 
     return preprocessed_text
+
+if __name__ == '__main__':
+    test_sentence = pd.read_csv('./data/test.csv')
+    test_sentence_rs = test_sentence['review'].apply(remove_stopwords)[0]
+    test_sentence_pre = test_sentence['review'].apply(preprocessing_function)[0]
+    print(f"Remove stopwords:\n{test_sentence_rs}")
+    print(f"My method:\n{test_sentence_pre}")
