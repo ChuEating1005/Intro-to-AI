@@ -46,7 +46,7 @@ class YourModel(nn.Module):
 
             # TO-DO 3-1: Pass parameters to initialize model
             # BEGIN YOUR CODE
-
+            vocab_size, embedding_dim, hidden_dim, output_dim, num_layers
             # END YOUR CODE
         ):
         super().__init__()
@@ -74,7 +74,20 @@ class YourModel(nn.Module):
         '''
         # TO-DO 3-2: Determine which modules your model should consist of
         # BEGIN YOUR CODE
-
+        self.embedding = nn.Embedding(
+            num_embeddings=vocab_size, 
+            embedding_dim=embedding_dim
+        )
+        self.rnn = nn.LSTM(
+            input_size=embedding_dim, 
+            hidden_size=hidden_dim, 
+            num_layers=num_layers, 
+            batch_first=True
+        )
+        self.fc = nn.Linear(
+            in_features=hidden_dim, 
+            out_features=output_dim
+        )
         # END YOUR CODE
         
     def forward(self, text):
@@ -87,7 +100,11 @@ class YourModel(nn.Module):
         '''
         # TO-DO 3-3: Determine how the model generates output based on input
         # BEGIN YOUR CODE
-
+        embedded = self.embedding(text)
+        rnn_out, hidden = self.rnn(embedded)
+        final_feature_map = rnn_out[-1, :, :]
+        final_output = self.fc(final_feature_map)
+        return final_output
         # END YOUR CODE
     
 class RNN(nn.Module):
@@ -104,7 +121,11 @@ class RNN(nn.Module):
         self.config = config
         self.model = YourModel(
             # BEGIN YOUR CODE
-            
+            vocab_size = config['vocab_size'],
+            embedding_dim = 100, 
+            hidden_dim = 128, 
+            output_dim = 2, 
+            num_layers = 1
             # END YOUR CODE
         ).to(config['device'])
 

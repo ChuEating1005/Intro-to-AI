@@ -137,52 +137,45 @@ def train(model_type, model, train_dataloader, test_dataloader, optimizer, loss_
     '''
     # TO-DO 2-2: Implement the training function
     # BEGIN YOUR CODE
-    device = config['device']
-    model.to(device)
     for epoch in range(config['epochs']):
-        model.train()  # Set model to training mode
+        model.train()
         total_loss = 0
-        predictions, truths = [], []
 
-        # Training loop
-        for sequences, labels in train_dataloader:
-            sequences = sequences.to(device)
-            labels = labels.to(device)
-            
-            optimizer.zero_grad()  # Clear previous gradients
-            outputs = model(sequences)  # Get model outputs
-            loss = loss_fn(outputs, labels)  # Compute the loss
-            loss.backward()  # Backpropagate the loss
-            optimizer.step()  # Update the model weights
-            
-            total_loss += loss.item() * sequences.size(0)  # Accumulate the loss
-            preds = torch.argmax(outputs, dim=1)  # Get the predictions
-            predictions.extend(preds.tolist())  # Store predictions
-            truths.extend(labels.tolist())  # Store true labels
+        train_progress_bar = tqdm(train_dataloader, desc=f'Epoch {epoch+1}/{config["epochs"]}', unit='batch')
 
-        # Testing loop
-        model.eval()  # Set model to evaluation mode
-        test_preds, test_truths = [], []
-        with torch.no_grad():  # Turn off gradients for testing
-            for sequences, labels in test_dataloader:
-                sequences = sequences.to(device)
-                labels = labels.to(device)
-                outputs = model(sequences)
-                preds = torch.argmax(outputs, dim=1)
-                test_preds.extend(preds.tolist())
-                test_truths.extend(labels.tolist())
+        for batch in train_progress_bar:
+            if model_type in ['RNN', 'BERT']:
+                inputs, labels = batch
+                inputs, labels = inputs.to(config['device']), labels.to(config['device'])
 
-        # Calculate metrics for the training set
-        precision, recall, f1, support = precision_recall_fscore_support(
-            truths, predictions, average='macro', zero_division=1)
-        precision = round(precision, 4)
-        recall = round(recall, 4)
-        f1 = round(f1, 4)
-        avg_loss = round(total_loss / len(train_dataloader.dataset), 4)
+                optimizer.zero_grad()
+                outputs = model.forward(inputs)
+                loss = loss_fn(outputs, labels)
+                loss.backward()
+                optimizer.step()
+                total_loss += loss.item()
 
-        # Print training results
-        print(f"Epoch: {epoch+1}/{config['epochs']}, Train Loss: {avg_loss}, F1 Score: {f1}, Precision: {precision}, Recall: {recall}")
-    
+                train_progress_bar.set_postfix({'loss': loss.item()})
+
+        model.eval()
+        all_preds = []
+        all_labels = []
+        test_progress_bar = tqdm(test_dataloader, desc='Evaluating', unit='batch')
+        with torch.no_grad():
+            for batch in test_progress_bar:
+                if model_type in ['RNN', 'BERT']:
+                    inputs, labels = batch
+                    inputs, labels = inputs.to(config['device']), labels.to(config['device'])
+                    
+                    outputs = model.forward(inputs)
+                    preds = torch.argmax(outputs, dim=1)
+                    all_preds.extend(preds.cpu().numpy())
+                    all_labels.extend(labels.cpu().numpy())
+
+
+        precision, recall, f1, _ = precision_recall_fscore_support(all_labels, all_preds, average='macro', zero_division=1)
+        avg_loss = total_loss / len(train_dataloader)
+        print(f'Epoch: {epoch+1}, Loss: {avg_loss:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}')   
     # END YOUR CODE
     
 if __name__ == '__main__':
