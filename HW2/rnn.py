@@ -46,7 +46,7 @@ class YourModel(nn.Module):
 
             # TO-DO 3-1: Pass parameters to initialize model
             # BEGIN YOUR CODE
-            vocab_size, embedding_dim, hidden_dim, output_dim, num_layers
+            vocab_size, embedding_dim, hidden_dim, output_dim, num_layers, dropout
             # END YOUR CODE
         ):
         super().__init__()
@@ -82,11 +82,17 @@ class YourModel(nn.Module):
             input_size=embedding_dim, 
             hidden_size=hidden_dim, 
             num_layers=num_layers, 
-            batch_first=True
+            dropout=dropout
         )
+        # Don't use this layer, it sucks
         self.fc = nn.Linear(
             in_features=hidden_dim, 
             out_features=output_dim
+        )
+        self.classifier = nn.Sequential(
+            nn.Dropout(dropout),
+            nn.Linear(hidden_dim, 2),
+            nn.Sigmoid()
         )
         # END YOUR CODE
         
@@ -101,10 +107,10 @@ class YourModel(nn.Module):
         # TO-DO 3-3: Determine how the model generates output based on input
         # BEGIN YOUR CODE
         embedded = self.embedding(text)
-        rnn_out, hidden = self.rnn(embedded)
-        final_feature_map = rnn_out[-1, :, :]
-        final_output = self.fc(final_feature_map)
-        return final_output
+        output, hidden = self.rnn(embedded)
+        output = output[-1, :, :]
+        output = self.classifier(output)
+        return output
         # END YOUR CODE
     
 class RNN(nn.Module):
@@ -122,10 +128,11 @@ class RNN(nn.Module):
         self.model = YourModel(
             # BEGIN YOUR CODE
             vocab_size = config['vocab_size'],
-            embedding_dim = 100, 
-            hidden_dim = 128, 
+            embedding_dim = 500, 
+            hidden_dim = 60, 
             output_dim = 2, 
-            num_layers = 1
+            num_layers = 1,
+            dropout = 0.5
             # END YOUR CODE
         ).to(config['device'])
 

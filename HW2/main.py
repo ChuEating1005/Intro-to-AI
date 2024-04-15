@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from bert import BERT, BERTDataset
 from rnn import RNN, RNNDataset
 from ngram import Ngram
-from preprocess import preprocessing_function
+from preprocess import preprocessing_function, remove_stopwords
 
 warnings.filterwarnings("ignore")
 
@@ -138,40 +138,33 @@ def train(model_type, model, train_dataloader, test_dataloader, optimizer, loss_
     # TO-DO 2-2: Implement the training function
     # BEGIN YOUR CODE
     for epoch in range(config['epochs']):
+        # training stage
         model.train()
         total_loss = 0
-
         train_progress_bar = tqdm(train_dataloader, desc=f'Epoch {epoch+1}/{config["epochs"]}', unit='batch')
-
-        for batch in train_progress_bar:
+        for data in train_progress_bar:
             if model_type in ['RNN', 'BERT']:
-                inputs, labels = batch
-                inputs, labels = inputs.to(config['device']), labels.to(config['device'])
-
                 optimizer.zero_grad()
-                outputs = model.forward(inputs)
-                loss = loss_fn(outputs, labels)
+                text, label = data[0].to(config['device']), data[1].to(config['device'])
+                outputs = model.forward(text)
+                loss = loss_fn(outputs, label)
+                total_loss += loss.item()
                 loss.backward()
                 optimizer.step()
-                total_loss += loss.item()
-
                 train_progress_bar.set_postfix({'loss': loss.item()})
-
+        # evaluating stage
         model.eval()
-        all_preds = []
-        all_labels = []
+        preds = []
+        labels = []
         test_progress_bar = tqdm(test_dataloader, desc='Evaluating', unit='batch')
         with torch.no_grad():
-            for batch in test_progress_bar:
+            for data in test_progress_bar:
                 if model_type in ['RNN', 'BERT']:
-                    inputs, labels = batch
-                    inputs, labels = inputs.to(config['device']), labels.to(config['device'])
-                    
-                    outputs = model.forward(inputs)
-                    preds = torch.argmax(outputs, dim=1)
-                    all_preds.extend(preds.cpu().numpy())
-                    all_labels.extend(labels.cpu().numpy())
-
+                    text, label = data[0].to(config['device']), data[1].to(config['device'])
+                    outputs = model.forward(text)
+                    pred = torch.argmax(outputs, dim=1)
+                    preds.extend(pred.cpu().numpy())
+                    labels.extend(label.cpu().numpy())
 
         precision, recall, f1, _ = precision_recall_fscore_support(all_labels, all_preds, average='macro', zero_division=1)
         avg_loss = total_loss / len(train_dataloader)
