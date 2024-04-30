@@ -1,0 +1,4 @@
+Episode no = 10; won: False; Q(s,a) = nan; reward = -469.0; and epsilon = 0.9986666666666667, win percentage = 0.0, 2024-04-30 17:17:26
+Episode no = 20; won: False; Q(s,a) = -0.44778429037965845; reward = -449.0; and epsilon = 0.9973333333333333, win percentage = 0.0, 2024-04-30 17:17:29
+Episode no = 10; won: False; Q(s,a) = nan; reward = -497.0; and epsilon = 0.9986666666666667, win percentage = 0.0, 2024-04-30 17:18:25
+Episode no = 20; won: False; Q(s,a) = nan; reward = -502.0; and epsilon = 0.9973333333333333, win percentage = 0.0, 2024-04-30 17:18:31
