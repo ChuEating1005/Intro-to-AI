@@ -166,7 +166,7 @@ def train(model_type, model, train_dataloader, test_dataloader, optimizer, loss_
                     preds.extend(pred.cpu().numpy())
                     labels.extend(label.cpu().numpy())
 
-        precision, recall, f1, _ = precision_recall_fscore_support(all_labels, all_preds, average='macro', zero_division=1)
+        precision, recall, f1, _ = precision_recall_fscore_support(labels, preds, average='macro', zero_division=1)
         avg_loss = total_loss / len(train_dataloader)
         print(f'Epoch: {epoch+1}, Loss: {avg_loss:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}')   
     # END YOUR CODE
